@@ -10,7 +10,7 @@ function transduce(input, reduce, transformator) {
 }
 
 
-// Transformations
+// TRANSFORMATIONS
 
 const mapTransformation = (transformator) => (reducing) => (result, kv) => reducing(result, transformator(kv));
 
@@ -86,9 +86,8 @@ const transduceToImmutableList = createTransduceWithConvert(
     mapToImmutableListConvertor
 )
 
-// More helpers to support Object data type
-
-function reduceObjectToObject(object, ...rest) {
+// more support for Object
+function transduceObjectToObject(object, ...rest) {
     return transduceToObject(
         objectToMapConvertor(object),
         ...rest
