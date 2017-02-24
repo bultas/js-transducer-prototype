@@ -35,7 +35,7 @@ In core of this method we save state in Map data-structure, so default output wi
     }
 
 
-## Transduce reduce argument
+## Reduce
 
 Now we have to tell to transduce method how we want to reduce data.
 
