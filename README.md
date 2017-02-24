@@ -19,9 +19,9 @@ Imagine that we have some data in different data-structures and we want to someh
     const immutableList = Immutable.List(arr);
 
 
-## Introduce **transduce** method
+## **transduce** method
 
-This simple method can help us with our "multi-data-structure" transformations
+*transduce* method can help us with our "multi-data-structure" transformations
 
 In core of this method we save state in Map data-structure, so default output will be Map
 
@@ -51,28 +51,27 @@ For now we use simple reduce method which save all transformed data to previous 
     );
 
 
-## Transformations methods
+## Transformator
 
-So now we can dive deeper and start transforming our data..  
+Now we can dive deeper and start transforming our data..  
 
-Firstly we have to prepare *transformation methods* like **map** and **filter**
+1. We have to prepare *transformation methods* like **map** and **filter**   
+2. We have to call the *transfomation method* with *transformation logic* to create final **Transformator**
 
-### Maping transformation
+### Maping transformations
 
-Lets start with **map transformation method**:
+Lets start with **map transformation method**
 
     const mapTransformation = (transformator) => (reducing) => (result, kv) => reducing(result, transformator(kv));
 
 
-Then we can use this method to create basic **Transformator** which transform our input data
-
-All what we need is call the **map transformation method** with some map logic
+Then call this method with some *transformation logic*
 
     const stringifyMapperTransformator = mapTransformation(
         ([key, value]) => [key, `${value}`]
     );
 
-Then we can use our **Transformator** to transform our data.
+Finally we can use our **Transformator** to transform data.
 
     transduce(
         map,
@@ -81,19 +80,21 @@ Then we can use our **Transformator** to transform our data.
     );
 
 
-### filter transformation
+### filter transformations
 
-Next we want to use filter transformations  
-So prepare another **transformation method** which solve data filtering
+If we want another behavior like filtering data, we have to create another type of **transformation method**
 
     const filterTransformation = (transformator) => (reducing) => (result, kv) => transformator(kv) ? reducing(result, kv) : result;
 
 
-Then we can use it same way how we used our **map transformation method** and call it with some filtering logic
+Then use it same way how we used **map transformation method**. Call it with logic to create **Transformator**
 
     const evenFilterTransformator = filterTransformation(
         ([key, value]) => (value % 2) === 0
     );
+
+
+Finally you can filter your data
 
     transduce(
         map,
@@ -118,9 +119,9 @@ Both Transformators have same arguments so they can be easily composable.
     );
 
 
-## Cross Data-structures transformations
+## Multi Data-structures transformations
 
-You can put **any Iterable data-structure** as *input* and apply same transformations and reducing regardless of input type
+You can put **any Iterable data-structure** as *input* and apply same transformations
 
     transduce(
         map,
@@ -145,10 +146,12 @@ Or
     );
 
 
-## Convering output value
+## Converting output value
 
 Sometime we just don't want get Map as output data-structure (default).
-So you can solve it by using **covertors**. Which convert the *output* to required type
+So you can solve it by using **covertors**.
+
+**Convert** is just simple function which get output and convert it to desired data-structure.
 
 For example if you want to work with Array on the *input* as *output*, you have to use **convertor**
 
@@ -164,7 +167,7 @@ For example if you want to work with Array on the *input* as *output*, you have 
         )
     )
 
-But you can go further and use Function Decorator (type of HOC) to create transduce which ouput desired data-strcture for default
+But you can go further and use Function Decorator (type of HOC) to create transduce with desired data-structure ouput
 
     function createTransduceWithConvert(transducer, convertor) {
         return (...args) => {
@@ -173,13 +176,13 @@ But you can go further and use Function Decorator (type of HOC) to create transd
         }
     }
 
-Now you can use this function and create transduce version which return Array data-structure for default
+For example create transduce version which return Array data-structure
 
     const transduceToArray = createTransduceWithConvert(
         mapToArrayConvertor
     );
 
-Then you can use it as same way how you use original **transduce** method
+Then you can use it as same way how you used original **transduce** method
 
     transduceToArray(
         arr,
