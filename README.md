@@ -23,7 +23,7 @@ Imagine that we have some data in different data-structures and we want to someh
 
 This simple method can help us with our "multi-data-structure" transformations
 
-In core of this method we save and manipulate data in Map format, so output will be always Map
+In core of this method we save state in Map data-structure, so default output will be Map
 
     function transduce(input, reduce, transformator) {
 
