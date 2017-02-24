@@ -254,7 +254,7 @@ console.log(
 // Or even more with Superman's Object helper
 
 console.log(
-    reduceObjectToObject(
+    transduceObjectToObject(
         obj,
         saveEntriesReduce,
         filterAndMapTransformator
