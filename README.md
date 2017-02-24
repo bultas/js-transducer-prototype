@@ -1,13 +1,14 @@
 # Transducer
-Transform and convert JS iterable data-structures
 
-If you want to learn more about definition of Transducer you can find more in [Clojure documentation](https://clojure.org/reference/transducers)
+Transducer to transduce JS iterable data-structures
+
+If you want to learn more about Transducer you should start in [Clojure documentation](https://clojure.org/reference/transducers)
 
 
 
 ## Data (input)
 
-We have some data in different data-structures and we want to somehow transform it  
+Imagine that we have some data in different data-structures and we want to somehow transform it  
 
     const arr = [ 1, 2, 3 ];
     const map = new Map([ ['id1', 1], ['id2', 2], ['id3', 3] ]);
@@ -34,11 +35,11 @@ In core of this method we save and manipulate data in Map format, so output will
     }
 
 
-## Basic transduce
+## Transduce reduce argument
 
 Now we have to tell to transduce method how we want to reduce data.
 
-So for now we use simply Reduce method which save all transformed data to previous result  
+For now we use simple reduce method which save all transformed data to previous result  
 
     const saveEntriesReduce = (result, [key, value]) => {
         return result.set(key, value);
@@ -50,44 +51,28 @@ So for now we use simply Reduce method which save all transformed data to previo
     );
 
 
-*Advanced TIP: You can customize reduce behavior with custom Reduce function passed to transduce
-Example: Array-style reduce helper to reduce value*
+## Transformations methods
 
-    const reduceValuesReduce = (reduce, init) => (result, [key, value]) => {
-        const x = reduce(result.get(0) || init, value);
-        return result.set(0, x)
-    };
+So now we can dive deeper and start transforming our data..  
 
-    transduce(
-        arr,
-        reduceValuesReduce(
-            (result, value) => result + value,
-            0
-        )
-    );
+Firstly we have to prepare *transformation methods* like **map** and **filter**
 
+### Maping transformation
 
-## Transformators
-
-TODO
-
-
-## Transformation methods
-
-We want to do basic transformations like **map** and **filter**
-
-
-Lets start with **map** transformation.
-So we prepare helper which can help us with these operation.
+Lets start with **map transformation method**:
 
     const mapTransformation = (transformator) => (reducing) => (result, kv) => reducing(result, transformator(kv));
 
 
-Then we can use this **map** helper to create basic **Transformator** which transform our input data
+Then we can use this method to create basic **Transformator** which transform our input data
+
+All what we need is call the **map transformation method** with some map logic
 
     const stringifyMapperTransformator = mapTransformation(
         ([key, value]) => [key, `${value}`]
     );
+
+Then we can use our **Transformator** to transform our data.
 
     transduce(
         map,
@@ -96,13 +81,15 @@ Then we can use this **map** helper to create basic **Transformator** which tran
     );
 
 
-Next we want to use filter transformations
-So prepare another helper which solve data filtering
+### filter transformation
+
+Next we want to use filter transformations  
+So prepare another **transformation method** which solve data filtering
 
     const filterTransformation = (transformator) => (reducing) => (result, kv) => transformator(kv) ? reducing(result, kv) : result;
 
 
-Then we can use it same way how we used the map transformation helper and pass into our Transformator
+Then we can use it same way how we used our **map transformation method** and call it with some filtering logic
 
     const evenFilterTransformator = filterTransformation(
         ([key, value]) => (value % 2) === 0
@@ -205,3 +192,22 @@ Then you can use it as same way how you use original **transduce** method
 ## Immutability
 
 Every original *input* data **will not be modified** in any way.
+
+## Advanced reducing
+
+You can customize reduce behavior with custom Reduce function passed to transduce
+
+Example: Array-style reduce helper to reduce value*
+
+    const reduceValuesReduce = (reduce, init) => (result, [key, value]) => {
+        const x = reduce(result.get(0) || init, value);
+        return result.set(0, x)
+    };
+
+    transduce(
+        arr,
+        reduceValuesReduce(
+            (result, value) => result + value,
+            0
+        )
+    );
