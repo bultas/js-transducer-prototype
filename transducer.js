@@ -1,25 +1,20 @@
 
 
-function reduce(input, transformator, initialValue = null) {
+function transduce(input, reduce, transformator) {
 
-    let response = new Map(initialValue);
-
-    for (kv of input.entries()) {
-        response = transformator((result, [key, value]) => {
-            return result.set(key, value);
-        })(response, kv)
-    }
-
-    return response;
+    return [...input.entries()].reduce(
+        transformator ? transformator(reduce) : reduce,
+        new Map()
+    );
 
 }
 
 
-// REDUCERS
+// Transformations
 
-const mapReducer = (f) => (reducing) => (result, input) => reducing(result, f(input));
+const mapTransformation = (transformator) => (reducing) => (result, kv) => reducing(result, transformator(kv));
 
-const filterReducer = (predicate) => (reducing) => (result, input) => predicate(input) ? reducing(result, input) : result;
+const filterTransformation = (transformator) => (reducing) => (result, kv) => transformator(kv) ? reducing(result, kv) : result;
 
 
 // CONVERTORS
@@ -48,55 +43,53 @@ function objectToMapConvertor(object) {
     );
 }
 
-function mapToImmutableMap(map) {
+function mapToImmutableMapConvertor(map) {
     return Immutable.Map(map.entries())
 }
 
-function mapToImmutableList(map) {
+function mapToImmutableListConvertor(map) {
     return Immutable.List(map.values())
 }
 
 
 // HELPERS
 
-function createReduceWithConvertor(reduce, convertor) {
+function createTransduceWithConvert(transducer, convertor) {
     return (...args) => {
-        const data = reduce(...args);
+        const data = transducer(...args);
         return convertor(data);
     }
 }
 
-// Higher-order helpers
-
-const reduceToArray = createReduceWithConvertor(
-    reduce,
+const transduceToArray = createTransduceWithConvert(
+    transduce,
     mapToArrayConvertor
 );
 
-const reduceToSet = createReduceWithConvertor(
-    reduce,
+const transduceToSet = createTransduceWithConvert(
+    transduce,
     mapToSetConvertor
 );
 
-const reduceToObject = createReduceWithConvertor(
-    reduce,
+const transduceToObject = createTransduceWithConvert(
+    transduce,
     mapToObjectConvertor
 )
 
-const reduceToImmutableMap = createReduceWithConvertor(
-    reduce,
-    mapToImmutableMap
+const transduceToImmutableMap = createTransduceWithConvert(
+    transduce,
+    mapToImmutableMapConvertor
 )
 
-const reduceToImmutableList = createReduceWithConvertor(
-    reduce,
-    mapToImmutableList
+const transduceToImmutableList = createTransduceWithConvert(
+    transduce,
+    mapToImmutableListConvertor
 )
 
 // More helpers to support Object data type
 
 function reduceObjectToObject(object, ...rest) {
-    return reduceToObject(
+    return transduceToObject(
         objectToMapConvertor(object),
         ...rest
     )
@@ -113,25 +106,59 @@ const obj = {'key1': 1, 'key2': 2, 'key3': 3};
 
 
 // The most basic usage is where input and output is Map.
+// use simple Reduce function to save all transformed data
+// Transformator argument is optional
+
+const saveEntriesReduce = (result, [key, value]) => {
+    return result.set(key, value);
+}
 
 console.log(
-    reduce(map, (value) => value)
+    transduce(
+        map,
+        saveEntriesReduce
+    )
 );
+
+// Advanced TIP: You can customize reduce behavior with custom Reduce function passed to transduce
+// Example: Array-style reduce helper to reduce value
+const reduceValuesReduce = (reduce, init) => (result, [key, value]) => {
+    const x = reduce(result.get(0) || init, value);
+    return result.set(0, x)
+}
+
+console.log(
+    transduce(
+        arr,
+        reduceValuesReduce(
+            (result, value) => result + value,
+            0
+        )
+    )
+)
 
 // You can transform all values in data input with mappers transformators
 
-const stringifyMapperTransformator = mapReducer(([key, value]) => [key, `${value}`]);
+const stringifyMapperTransformator = mapTransformation(([key, value]) => [key, `${value}`]);
 
 console.log(
-    reduce(map, stringifyMapperTransformator)
+    transduce(
+        map,
+        saveEntriesReduce,
+        stringifyMapperTransformator
+    )
 )
 
 // Or you can filter values in data input with filters transformators
 
-const evenFilterTransformator = filterReducer(([key, value]) => (value % 2) === 0);
+const evenFilterTransformator = filterTransformation(([key, value]) => (value % 2) === 0);
 
 console.log(
-    reduce(map, evenFilterTransformator)
+    transduce(
+        map,
+        saveEntriesReduce,
+        evenFilterTransformator
+    )
 );
 
 // Or you can compose these transformators
@@ -139,8 +166,9 @@ console.log(
 const filterAndMapTransformator = R.compose(evenFilterTransformator, stringifyMapperTransformator)
 
 console.log(
-    reduce(
+    transduce(
         map,
+        saveEntriesReduce,
         filterAndMapTransformator
     )
 );
@@ -149,35 +177,55 @@ console.log(
 // Results will be Map for default
 
 console.log(
-    reduce(arr, filterAndMapTransformator)
+    transduce(
+        arr,
+        saveEntriesReduce,
+        filterAndMapTransformator
+    )
 );
 
 // Use mapToArrayConvertor to get ouput as same as input type
 
 console.log(
     mapToArrayConvertor(
-        reduce(arr, filterAndMapTransformator)
+        transduce(
+            arr,
+            saveEntriesReduce,
+            filterAndMapTransformator
+        )
     )
 );
 
-// Or use reduceToArray helper to get array output directly
+// Or use transduceToArray helper to get array output directly
 
 console.log(
-    reduceToArray(arr, filterAndMapTransformator)
+    transduceToArray(
+        arr,
+        saveEntriesReduce,
+        filterAndMapTransformator
+    )
 );
 
 // You can get output in different output type
 
 console.log(
     mapToSetConvertor(
-        reduce(arr, filterAndMapTransformator)
+        transduce(
+            arr,
+            saveEntriesReduce,
+            filterAndMapTransformator
+        )
     )
 );
 
 // Or simply use helper to get output type of choice
 
 console.log(
-    reduceToSet(arr, filterAndMapTransformator)
+    transduceToSet(
+        arr,
+        saveEntriesReduce,
+        filterAndMapTransformator
+    )
 );
 
 
@@ -186,18 +234,20 @@ console.log(
 
 console.log(
     mapToObjectConvertor(
-        reduce(
+        transduce(
             objectToMapConvertor(obj),
+            saveEntriesReduce,
             filterAndMapTransformator
         )
     )
 );
 
-// You can simplify this with reduceToObject Helper
+// You can simplify this with transduceToObject Helper
 
 console.log(
-    reduceToObject(
+    transduceToObject(
         objectToMapConvertor(obj),
+        saveEntriesReduce,
         filterAndMapTransformator
     )
 );
@@ -207,6 +257,7 @@ console.log(
 console.log(
     reduceObjectToObject(
         obj,
+        saveEntriesReduce,
         filterAndMapTransformator
     )
 );
@@ -218,8 +269,9 @@ const immutableList = Immutable.List(arr);
 
 
 console.log(
-    reduce(
+    transduce(
         immutableMap,
+        saveEntriesReduce,
         filterAndMapTransformator
     )
 );
@@ -228,8 +280,9 @@ console.log(
 
 console.log(
     Immutable.Map(
-        reduce(
+        transduce(
             immutableMap,
+            saveEntriesReduce,
             filterAndMapTransformator
         ).entries()
     )
@@ -237,8 +290,9 @@ console.log(
 
 console.log(
     Immutable.List(
-        reduce(
+        transduce(
             immutableList,
+            saveEntriesReduce,
             filterAndMapTransformator
         ).values()
     )
@@ -247,22 +301,24 @@ console.log(
 // And this can be simplified with some convertors
 
 console.log(
-    reduceToImmutableMap(
+    transduceToImmutableMap(
         immutableMap,
+        saveEntriesReduce,
         filterAndMapTransformator
     )
 );
 
 console.log(
-    reduceToImmutableList(
+    transduceToImmutableList(
         immutableList,
+        saveEntriesReduce,
         filterAndMapTransformator
     )
 );
 
 // Handy for React = get JSX like components from object
 
-const convertToJSXComponentExample = mapReducer(([key, value]) => {
+const convertToJSXComponentExample = mapTransformation(([key, value]) => {
     return [
         key,
         `<div key=${key}>${value}</div>`
@@ -270,26 +326,16 @@ const convertToJSXComponentExample = mapReducer(([key, value]) => {
 });
 
 console.log(
-    reduceToArray(
+    transduceToArray(
         objectToMapConvertor(obj),
+        saveEntriesReduce,
         convertToJSXComponentExample
-    )
-);
-
-// You can pass initial value to reduce function
-// TODO why we need it? remove?
-
-console.log(
-    reduce(
-        map,
-        filterAndMapTransformator,
-        new Map([ ['initialValue', 10] ])
     )
 );
 
 // After all these operations we have original data without any changes
 
-console.log(map)
-console.log(set)
-console.log(arr)
-console.log(obj)
+console.log(map);
+console.log(set);
+console.log(arr);
+console.log(obj);
