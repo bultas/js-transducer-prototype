@@ -10,13 +10,13 @@ If you want to learn more about Transducer you should start in [Clojure document
 
 Imagine that we have some data in different data-structures and we want to somehow transform it  
 
-    const arr = [ 1, 2, 3 ];
-    const map = new Map([ ['id1', 1], ['id2', 2], ['id3', 3] ]);
-    const set = new Set([1, 2, 3]);
+    const dataAsArray = [ 1, 2, 3 ];
+    const dataAsMap = new Map([ ['id1', 1], ['id2', 2], ['id3', 3] ]);
+    const dataAsSet = new Set([1, 2, 3]);
 
     // ImmutableJS supported
-    const immutableMap = Immutable.Map(obj);
-    const immutableList = Immutable.List(arr);
+    const dataAsimmutableMap = Immutable.Map(obj);
+    const dataAsimmutableList = Immutable.List(dataAsArray);
 
 
 ## **transduce** method
@@ -41,13 +41,13 @@ Now we have to tell to transduce method how we want to reduce data.
 
 For now we use simple reduce method which save all transformed data to previous result  
 
-    const saveEntriesReduce = (result, [key, value]) => {
+    const reduce = (result, [key, value]) => {
         return result.set(key, value);
     };
 
     transduce(
-        map,
-        saveEntriesReduce
+        dataAsMap,
+        reduce
     );
 
 
@@ -67,20 +67,20 @@ Lets start with **map transformation method**
 
 Then call this method with some *transformation logic*
 
-    const stringifyMapperTransformator = mapTransformation(
+    const stringifyTransformator = mapTransformation(
         ([key, value]) => [key, `${value}`]
     );
 
 Finally we can use our **Transformator** to transform data.
 
     transduce(
-        map,
-        saveEntriesReduce,
-        stringifyMapperTransformator
+        dataAsMap,
+        reduce,
+        stringifyTransformator
     );
 
 
-### filter transformations
+### Filter transformations
 
 If we want another behavior like filtering data, we have to create another type of **transformation method**
 
@@ -89,7 +89,7 @@ If we want another behavior like filtering data, we have to create another type 
 
 Then use it same way how we used **map transformation method**. Call it with logic to create **Transformator**
 
-    const evenFilterTransformator = filterTransformation(
+    const filterEvenTransformator = filterTransformation(
         ([key, value]) => (value % 2) === 0
     );
 
@@ -97,9 +97,9 @@ Then use it same way how we used **map transformation method**. Call it with log
 Finally you can filter your data
 
     transduce(
-        map,
-        saveEntriesReduce,
-        evenFilterTransformator
+        dataAsMap,
+        reduce,
+        filterEvenTransformator
     );
 
 
@@ -108,13 +108,13 @@ Finally you can filter your data
 Both Transformators have same arguments so they can be easily composable.
 
     const filterAndMapTransformator = R.compose(
-        evenFilterTransformator,
-        stringifyMapperTransformator
+        filterEvenTransformator,
+        stringifyTransformator
     )
 
     transduce(
-        map,
-        saveEntriesReduce,
+        dataAsMap,
+        reduce,
         filterAndMapTransformator
     );
 
@@ -124,24 +124,24 @@ Both Transformators have same arguments so they can be easily composable.
 You can put **any Iterable data-structure** as *input* and apply same transformations
 
     transduce(
-        map,
-        saveEntriesReduce,
+        dataAsMap,
+        reduce,
         filterAndMapTransformator
     );
 
 Have same results as
 
     transduce(
-        set,
-        saveEntriesReduce,
+        dataAsSet,
+        reduce,
         filterAndMapTransformator
     );
 
 Or
 
     transduce(
-        arr,
-        saveEntriesReduce,
+        dataAsArray,
+        reduce,
         filterAndMapTransformator
     );
 
@@ -161,8 +161,8 @@ For example if you want to work with Array on the *input* as *output*, you have 
 
     mapToArrayConvertor(
         transduce(
-            arr,
-            saveEntriesReduce,
+            dataAsArray,
+            reduce,
             filterAndMapTransformator
         )
     )
@@ -185,8 +185,8 @@ For example create transduce version which return Array data-structure
 Then you can use it as same way how you used original **transduce** method
 
     transduceToArray(
-        arr,
-        saveEntriesReduce,
+        dataAsArray,
+        reduce,
         filterAndMapTransformator
     );
 
@@ -208,7 +208,7 @@ Example: Array-style reduce helper to reduce value*
     };
 
     transduce(
-        arr,
+        dataAsArray,
         reduceValuesReduce(
             (result, value) => result + value,
             0
