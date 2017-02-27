@@ -41,13 +41,13 @@ Now we have to tell to transduce method how we want to reduce data.
 
 For now we use simple reduce method which save all transformed data to previous result  
 
-    const reduce = (result, [key, value]) => {
+    const saveReduce = (result, [key, value]) => {
         return result.set(key, value);
     };
 
-    transduce(
+    transdusaveRe(
         dataAsMap,
-        reduce
+        saveReduce
     );
 
 
@@ -75,7 +75,7 @@ Finally we can use our **Transformator** to transform data.
 
     transduce(
         dataAsMap,
-        reduce,
+        saveReduce,
         stringifyTransformator
     );
 
@@ -98,7 +98,7 @@ Finally you can filter your data
 
     transduce(
         dataAsMap,
-        reduce,
+        saveReduce,
         filterEvenTransformator
     );
 
@@ -114,7 +114,7 @@ Both Transformators have same arguments so they can be easily composable.
 
     transduce(
         dataAsMap,
-        reduce,
+        saveReduce,
         filterAndMapTransformator
     );
 
@@ -125,7 +125,7 @@ You can put **any Iterable data-structure** as *input* and apply same transforma
 
     transduce(
         dataAsMap,
-        reduce,
+        saveReduce,
         filterAndMapTransformator
     );
 
@@ -133,7 +133,7 @@ Have same results as
 
     transduce(
         dataAsSet,
-        reduce,
+        saveReduce,
         filterAndMapTransformator
     );
 
@@ -141,7 +141,7 @@ Or
 
     transduce(
         dataAsArray,
-        reduce,
+        saveReduce,
         filterAndMapTransformator
     );
 
@@ -162,7 +162,7 @@ For example if you want to work with Array on the *input* as *output*, you have 
     mapToArrayConvertor(
         transduce(
             dataAsArray,
-            reduce,
+            saveReduce,
             filterAndMapTransformator
         )
     )
@@ -186,7 +186,7 @@ Then you can use it as same way how you used original **transduce** method
 
     transduceToArray(
         dataAsArray,
-        reduce,
+        saveReduce,
         filterAndMapTransformator
     );
 
@@ -214,3 +214,39 @@ Example: Array-style reduce helper to reduce value*
             0
         )
     );
+
+
+## Helpers
+
+### Trans Helper
+
+    function trans(input, transformation) {
+        return transduce(
+            input,
+            saveReduce,
+            transformation
+        );
+    }
+
+    trans(
+        dataAsArray,
+        filterAndMapTransformator
+    )
+
+### Reduce Helper
+
+    function reduce(input, reduce, init) {
+        return transduce(
+            input,
+            reduceValuesReduce(
+                reduce,
+                init
+            )
+        )
+    }
+
+    reduce(
+        dataAsArray,
+        (result, value) => (result + value) * 10,
+        0
+    )
