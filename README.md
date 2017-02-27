@@ -1,8 +1,8 @@
-# Transducer
+# Transformer JS
 
-Transducer to transduce JS iterable data-structures
+Utility to transduce JS iterable data-structures
 
-If you want to learn more about Transducer you should start in [Clojure documentation](https://clojure.org/reference/transducers)
+If you want to learn more you should start in [Clojure documentation](https://clojure.org/reference/transducers) and learn basics about Transducers
 
 
 
